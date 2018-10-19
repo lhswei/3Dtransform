@@ -23,6 +23,7 @@ const GLdouble PI = 3.14159;
 const GLdouble degper = PI / 180;
 
 typedef GLfloat Matrix4x4 [g_row][g_col];
+typedef GLfloat Vertex4 [g_row];
 
 Matrix4x4 matComposite = { 0 };
 
@@ -35,12 +36,33 @@ Matrix4x4 g_squareVertex =
 	{ 1.0,   1.0,    1.0,   1.0 },    //w
 };
 
+const GLuint g_vertexCount = 4;		// 顶点个数
+
+//三棱锥初始数据
+GLfloat g_initVertexs[g_vertexCount][g_row] =
+{
+	{ 35.0,  25.0,   60.0,   1.0 },   //x
+	{ 30.0,  5.0,    -10.0,  1.0 },   //y
+	{ 50.0,  20.0,   10.0,   1.0 },    //z
+	{ 37.0,  90.0,   0.0,    1.0 },    //w
+};
+
+GLfloat g_shapeVertexs[g_vertexCount][g_row];
+GLuint g_drawOrder[3][3] =
+{
+	{ 0, 1, 2 },
+	{ 1, 3, 2 },
+	{ 3, 0, 2 },
+};
+
 GLfloat g_xAxis[2] = { -100.0, 500.0 };
 GLfloat g_yAxis[2] = { -100.0, 500.0 };
 GLfloat g_zAxis[2] = { -300.0, 200.0 };
 
 wcPt3D g_p1(-2, -10, 1);
 wcPt3D g_p2(20, 100, -10);
+
+void transforData();
 
 /*Construct the 4 by 4 identity matrix.*/
 void matrix4x4SetIdentity (Matrix4x4 matIdent4x4)
@@ -78,6 +100,23 @@ void matrix4x4PreMultiply(Matrix4x4 m1, Matrix4x4 m2)
 	}
 }
 
+/* Premultiply matri m1 times vertex4 v2, store result in v2*/
+void matrix4x4PreVertex4(Matrix4x4 m1, Vertex4 v2)
+{
+	GLint row, col;
+	Vertex4 vertex4Temp;
+
+	for (row = 0; row < 4; row++)
+	{
+		vertex4Temp[row] = m1[row][0] * v2[0] + m1[row][1] * v2[1] + m1[row][2] * v2[2] + m1[row][3] * v2[3];
+	}
+
+	for (row = 0; row < 4; row++)
+	{
+		v2[row] = vertex4Temp[row];
+	}
+}
+
 /* Procedure for generating 3D translation matrix. */
 void translate3D(GLfloat tx, GLfloat ty, GLfloat tz)
 {
@@ -91,7 +130,10 @@ void translate3D(GLfloat tx, GLfloat ty, GLfloat tz)
 	matTransl3D[1][3] = ty;
 	matTransl3D[2][3] = tz;
 
-	matrix4x4PreMultiply(matTransl3D, matComposite);
+	for (int i = 0; i < g_vertexCount; i++)
+	{
+		matrix4x4PreVertex4(matTransl3D, g_shapeVertexs[i]);
+	}
 }
 
 /* Procedure for generating 3D a quaternion rotation matrix. */
@@ -124,7 +166,10 @@ void rotate3D(wcPt3D p1, wcPt3D p2, GLfloat radianAngle)
 	matQuatRot[2][2] = uz * uz * oneC + cosA;
 
 	// 进行旋转
-	matrix4x4PreMultiply(matQuatRot, matComposite);
+	for (int i = 0; i < g_vertexCount; i++)
+	{
+		matrix4x4PreVertex4(matQuatRot, g_shapeVertexs[i]);
+	}
 
 	// 平移回原来的位置
 	translate3D(p1.x, p1.y, p1.z);
@@ -145,8 +190,11 @@ void scal3D(GLfloat sx, GLfloat sy, GLfloat sz, wcPt3D fixedPt)
 	matScale3D[2][3] = (1 - sz) * fixedPt.z;
 
 	// 进行缩放
-	matrix4x4PreMultiply(matScale3D, matComposite);
-
+	// 进行旋转
+	for (int i = 0; i < g_vertexCount; i++)
+	{
+		matrix4x4PreVertex4(matScale3D, g_shapeVertexs[i]);
+	}
 }
 
 // 画坐标系
@@ -184,23 +232,17 @@ void drawRotate()
 void drawTetra()
 {
 	glColor3f(0.0, 1.0, 0.0);
-	glBegin(GL_LINE_STRIP);
-	glVertex3d(matComposite[0][0], matComposite[1][0], matComposite[2][0]);
-	glVertex3d(matComposite[0][1], matComposite[1][1], matComposite[2][1]);
-	glVertex3d(matComposite[0][3], matComposite[1][3], matComposite[2][3]);
-	glEnd();
 
-	glBegin(GL_LINE_STRIP);
-	glVertex3d(matComposite[0][3], matComposite[1][3], matComposite[2][3]);
-	glVertex3d(matComposite[0][2], matComposite[1][2], matComposite[2][2]);
-	glVertex3d(matComposite[0][1], matComposite[1][1], matComposite[2][1]);
-	glEnd();
-
-	glBegin(GL_LINE_STRIP);
-	glVertex3d(matComposite[0][3], matComposite[1][3], matComposite[2][3]);
-	glVertex3d(matComposite[0][0], matComposite[1][0], matComposite[2][0]);
-	glVertex3d(matComposite[0][2], matComposite[1][2], matComposite[2][2]);
-	glEnd();
+	for (int i = 0; i < 3; i++)
+	{
+		glBegin(GL_LINE_STRIP);
+		for (int j = 0; j < 3; j++)
+		{
+			int index = g_drawOrder[i][j];
+			glVertex3d(g_shapeVertexs[index][0], g_shapeVertexs[index][1], g_shapeVertexs[index][2]);
+		}
+		glEnd();
+	}
 }
 
 void displayFcn(void)
@@ -230,10 +272,28 @@ void reshepeFcn(GLint newWidth, GLint newHeight)
 	winHeight = newHeight;
 }
 
+void resetShapData()
+{
+	for (int i = 0; i < g_vertexCount; i++)
+	{
+		for (int j = 0; j < g_row; j++)
+		{
+			g_shapeVertexs[i][j] = g_initVertexs[i][j];
+		}
+	}
+}
+
+void transforData()
+{
+	for (int i = 0; i < g_vertexCount; i++)
+	{
+		matrix4x4PreVertex4(matComposite, g_shapeVertexs[i]);
+	}
+}
+
 void init(void)
 {
-	matrix4x4SetIdentity(matComposite);
-	matrix4x4PreMultiply(g_squareVertex, matComposite);
+	resetShapData();
 	glClearColor(1.0, 1.0, 1.0, 0.0);
 	glMatrixMode(GL_MODELVIEW);
 	glLoadIdentity();
