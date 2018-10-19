@@ -1,3 +1,4 @@
+#include <stdio.h>
 #include <GL/glut.h>
 #include <math.h>
 
@@ -63,6 +64,18 @@ wcPt3D g_p1(-2, -10, 1);
 wcPt3D g_p2(20, 100, -10);
 
 void transforData();
+
+void printMatrix(Matrix4x4 ma)
+{
+	printf("------------------------------------\n");
+	
+	printf("|"); printf(" %.6f ", ma[0][0]);	printf(" %.6f ", ma[0][1]);  printf(" %.6f ", ma[0][2]);  printf(" %.6f ", ma[0][3]); printf("|\n");
+	printf("|"); printf(" %.6f ", ma[1][0]);	printf(" %.6f ", ma[1][1]);  printf(" %.6f ", ma[1][2]);  printf(" %.6f ", ma[1][3]); printf("|\n");
+	printf("|"); printf(" %.6f ", ma[2][0]);	printf(" %.6f ", ma[2][1]);  printf(" %.6f ", ma[2][2]);  printf(" %.6f ", ma[2][3]); printf("|\n");
+	printf("|"); printf(" %.6f ", ma[3][0]);	printf(" %.6f ", ma[3][1]);  printf(" %.6f ", ma[3][2]);  printf(" %.6f ", ma[3][3]); printf("|\n");
+
+	printf("-------------------------------------\n");
+}
 
 /*Construct the 4 by 4 identity matrix.*/
 void matrix4x4SetIdentity (Matrix4x4 matIdent4x4)
@@ -130,6 +143,9 @@ void translate3D(GLfloat tx, GLfloat ty, GLfloat tz)
 	matTransl3D[1][3] = ty;
 	matTransl3D[2][3] = tz;
 
+	printf("开始平移 tx = %.6f ty = %.6f tz = %.6f \n", tx, ty, tz);
+	printMatrix(matTransl3D);
+
 	for (int i = 0; i < g_vertexCount; i++)
 	{
 		matrix4x4PreVertex4(matTransl3D, g_shapeVertexs[i]);
@@ -165,6 +181,9 @@ void rotate3D(wcPt3D p1, wcPt3D p2, GLfloat radianAngle)
 	matQuatRot[2][1] = uz * uy * oneC + ux * sinA;
 	matQuatRot[2][2] = uz * uz * oneC + cosA;
 
+	printf("开始旋转 radianAngle = %.6f \n", radianAngle);
+	printMatrix(matQuatRot);
+
 	// 进行旋转
 	for (int i = 0; i < g_vertexCount; i++)
 	{
@@ -189,6 +208,8 @@ void scal3D(GLfloat sx, GLfloat sy, GLfloat sz, wcPt3D fixedPt)
 	matScale3D[2][2] = sz;
 	matScale3D[2][3] = (1 - sz) * fixedPt.z;
 
+	printf("开始缩放 sx = %.6f sy = %.6f sz = %.6f \n", sx, sy, sz);
+	printMatrix(matScale3D);
 	// 进行缩放
 	// 进行旋转
 	for (int i = 0; i < g_vertexCount; i++)
@@ -338,62 +359,86 @@ void KeyboardKeys(unsigned char key, int x, int y)
 	{
 	case 'w':
 	{
+		printf("===============向前移动=========================\n");
 		translate3D(0, 0, -2);
+		printf("===============================================\n");
 		break;
 	}
 	case 's':
 	{
+		printf("===============向后移动=========================\n");
 		translate3D(0, 0, 2);
+		printf("===============================================\n");
 		break;
 	}
 	case 'a':
 	{
+		printf("===============向左移动=========================\n");
 		translate3D(-2, 0, 0);
+		printf("===============================================\n");
 		break;
 	}
 	case 'd':
 	{
+		printf("===============向右移动=========================\n");
 		translate3D(2, 0, 0);
+		printf("===============================================\n");
 		break;
 	}
 	case 'q':
 	{
+		printf("===============向上移动=========================\n");
 		translate3D(0, 2, 0);
+		printf("===============================================\n");
 		break;
 	}
 	case 'e':
 	{
+		printf("===============向下移动=========================\n");
 		translate3D(0, -2, 0);
+		printf("===============================================\n");
 		break;
 	}
 	case 'c':
 	{
+		printf("===============沿着指定轴移动=========================\n");
 		translate3D(-2, -10, 1);
+		printf("===============================================\n");
 		break;
 	}
 	case 'v':
 	{
+		printf("===============沿着指定轴移动=========================\n");
+		printf("===============================================\n");
 		translate3D(2, 10, -1);
 		break;
 	}
 	case '=':
 	{
+		printf("===============等比例放大=========================\n");
 		scal3D(1.1, 1.1, 1.1, g_p1);
+		printf("===============================================\n");
 		break;
 	}
 	case '-':
 	{
+		printf("===============等比例缩小=========================\n");
 		scal3D(0.9, 0.9, 0.9, g_p1);
+		printf("===============================================\n");
 		break;
 	}
 	case 'z':
 	{
+		printf("===============旋转操作=========================\n");
 		rotate3D(g_p1, g_p2, degper * 5);
+		printf("===============================================\n");
 		break;
 	}
 	case 'x':
 	{
+		printf("===============旋转操作=========================\n");
 		rotate3D(g_p1, g_p2, -degper * 5);
+		printf("===============================================\n");
 		break;
 	}
 	case 'o':
